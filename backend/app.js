@@ -1,11 +1,15 @@
+const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
-const postsRoutes = require('./routes/posts-route')
+const postsRoutes = require('./routes/posts');
+const userRoutes = require('./routes/user');
+
+
 const app = express();
 
-mongoose.connect('mongodb+srv://meanblogroot:BXKFYs1oUUv5OMyO@cluster0.tjufv.mongodb.net/mean-blog?retryWrites=true&w=majority',
+mongoose.connect('mongodb+srv://meanblogroot:' + process.env.MONGO_ATLAS_PW + '@cluster0.tjufv.mongodb.net/mean-blog?retryWrites=true&w=majority',
   {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -14,11 +18,14 @@ mongoose.connect('mongodb+srv://meanblogroot:BXKFYs1oUUv5OMyO@cluster0.tjufv.mon
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
+app.use("/images", express.static(path.join(__dirname, 'images')));
+app.use("/", express.static(path.join(__dirname, 'angular')));
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.setHeader('Access-Control-Allow-Methods',
     'GET, POST, PATCH, PUT, DELETE, OPTIONS')
 
@@ -26,5 +33,11 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/posts', postsRoutes);
+app.use('/api/user', userRoutes);
+
+//manage request targeting no path to angular
+app.use((req, res, next) => {
+  res.sendFile(path.join(__dirname, 'angular', 'index.html'));
+})
 
 module.exports = app;
